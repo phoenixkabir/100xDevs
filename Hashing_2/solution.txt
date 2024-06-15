@@ -1,0 +1,123 @@
+Intuition
+Use such a data structure which can find out the strings in which the prefix is present in linear time. We can use Trie data structure.
+
+Implementation
+A search query on a Trie is being used to determine whether the string is present or not in the trie, but in this case, we are asked to
+ find all the strings with each prefix of "s". This is equivalent to doing a DFS traversal on a graph.
+
+From a Trie node, we need to visit adjacent Trie nodes and do this recursively until there is no more adjacent. This recursive function 
+will take 2 arguments one as Trie Node which points to the current Trie Node being visited and the other as the string which stores the 
+string found so far with prefix as "s". We are creating an unordered_map where each alphabet points to a trie node. 
+
+Each Trie Node stores a boolean variable “isLast” which becomes true if the node represents the end of contact or element of the given
+ contact list. It is nothing but a variable that signifies that we don’t need to move forward to do a search because we reached the end 
+ of the particular word of the contactList.
+
+Our approach is to find the prefix starting with the string formed is to check if the prefix exists in the Trie, if yes then call the
+ "displayContacts()" function which will display all the corresponding suggestions.
+After every entered character we check if the string exists in the Trie.
+Instead of checking again and again, we can maintain a pointer "prevNode" that points to the TrieNode which corresponds to the last entered 
+character by the user, now we need to check the child node for the ‘prevNode’ when user enters another character to check if it exists in the 
+Trie.
+If the new prefix is not in the Trie, then all the string which are formed by entering characters after "prefix" can’t be found in Trie too. 
+So we break the loop that is being used to generate prefixes one by one and print "0" for all remaining characters.
+Complexity
+Time Complexity: O(|s| * n * max|contact[i]|) where ‘n’ is the number of elements in the given array.
+Auxiliary Space: O(n * max|contact[i]|) where ‘n’ is the number of elements in the given array.
+
+
+'''cpp
+
+class Solution{
+public:
+    // Structure for Trie Node
+    struct TrieNode{
+    	unordered_map<char,TrieNode*> child;
+    	bool isLast;
+    	TrieNode(){
+    		for (char i = 'a'; i <= 'z'; i++)
+    			child[i] = NULL;
+    		isLast = false;
+    	}
+    };
+    TrieNode *root = NULL;
+    
+    // Function to insert a string into the Trie
+    void insert(string s){
+    	int len = s.length();
+    	TrieNode *itr = root;
+    	for (int i = 0; i < len; i++){
+    		TrieNode *nextNode = itr->child[s[i]];
+    		if (nextNode == NULL){
+    			nextNode = new TrieNode();
+    			itr->child[s[i]] = nextNode;
+    		}
+    		itr = nextNode;
+    		if (i == len - 1)
+    			itr->isLast = true;
+    	}
+    }
+    
+    // Function to insert contact strings into the Trie
+    void insertIntoTrie(string s[],int n){
+    	root = new TrieNode();
+    	for (int i = 0; i < n; i++)
+    		insert(s[i]);
+    }
+    
+    // Utility function to display contacts starting from given prefix
+    void displayContactsUtil(TrieNode *curNode, string prefix, 
+                            vector<string> &vec){
+    	if (curNode->isLast)
+    		    vec.push_back(prefix);
+    	for (char i = 'a'; i <= 'z'; i++){
+    		TrieNode *nextNode = curNode->child[i];
+    		if (nextNode != NULL)
+    			displayContactsUtil(nextNode, prefix + (char)i, vec);
+    	}
+    }
+    
+    // Main function to display contacts for a given prefix
+    vector<vector<string>> displayContacts(int n, string contact[], string s)
+    {
+    	// Insert contact strings into the Trie
+    	insertIntoTrie(contact, n);
+    	TrieNode *prevNode = root;
+        vector<vector<string>> res;
+    	string prefix = "";
+    	int len = s.length();
+    	int i;
+    	
+    	// Iterate through the given string prefix
+    	for (i = 0; i < len; i++){
+    		vector<string> v;
+    		prefix += (char)s[i];
+    		char lastChar = prefix[i];
+    		TrieNode *curNode = prevNode->child[lastChar];
+    		
+    		// If no more contacts can be found, add 0 to the result vector
+    		if (curNode == NULL){
+    			v.push_back("0");
+    			res.push_back(v);
+    			i++;
+    			break;
+    		}
+    		displayContactsUtil(curNode, prefix, v);
+    		prevNode = curNode;
+    		res.push_back(v);
+    	}
+    	
+    	// If there are remaining characters in the prefix, add 0 to the result vector
+    	for (; i<len; i++){
+    	    vector<string> v;
+    	    v.push_back("0");
+    	    res.push_back(v);
+    	}
+    	
+    	// Return the final result vector
+    	return res;
+    }
+};
+
+
+'''
